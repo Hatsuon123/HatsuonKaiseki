@@ -21,7 +21,12 @@ recordButton.addEventListener('click', () => {
     }
 });
 
-compareButton.addEventListener('click', comparePronunciation);
+compareButton.addEventListener('click', () => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    comparePronunciation();
+});
 
 function setup() {
     canvas = createCanvas(800, 400);
@@ -84,10 +89,25 @@ function analyzeAudio(audio) {
 }
 
 function estimateFormants(spectrum) {
-    // 簡単なフォルマント解析の例
-    let formants = { F1: 500, F2: 1500 };
-    // 実際のフォルマント解析には詳細なアルゴリズムが必要
+    let formants = {};
+    let peakIndices = findPeaks(spectrum);
+    if (peakIndices.length >= 2) {
+        formants.F1 = peakIndices[0] * (audioContext.sampleRate / 2) / spectrum.length;
+        formants.F2 = peakIndices[1] * (audioContext.sampleRate / 2) / spectrum.length;
+    } else {
+        formants.F1 = formants.F2 = 0;
+    }
     return formants;
+}
+
+function findPeaks(spectrum) {
+    let peaks = [];
+    for (let i = 1; i < spectrum.length - 1; i++) {
+        if (spectrum[i] > spectrum[i - 1] && spectrum[i] > spectrum[i + 1]) {
+            peaks.push(i);
+        }
+    }
+    return peaks;
 }
 
 function drawFormants(formants, label, col) {
@@ -104,7 +124,12 @@ function drawFormants(formants, label, col) {
 function comparePronunciation() {
     if (!nativeBuffer) {
         fetch('native_dog.mp3')
-            .then(response => response.arrayBuffer())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                return response.arrayBuffer();
+            })
             .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
             .then(decodedData => {
                 nativeBuffer = decodedData;
@@ -112,7 +137,7 @@ function comparePronunciation() {
                 redraw();
             })
             .catch(err => {
-                console.error('Error decoding native audio', err);
+                console.error('Error decoding native audio:', err);
                 output.textContent = 'Error decoding native audio: ' + err.message;
             });
     } else {
