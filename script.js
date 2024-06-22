@@ -1,6 +1,7 @@
 let recordButton = document.getElementById('recordButton');
 let compareButton = document.getElementById('compareButton');
 let output = document.getElementById('output');
+let nativeAudio = document.getElementById('nativeAudio');
 let audioContext;
 let recorder;
 let audioChunks = [];
@@ -29,7 +30,7 @@ function startRecording() {
                 audioChunks = [];
                 let audioBuffer = await audioBlob.arrayBuffer();
                 let audio = await audioContext.decodeAudioData(audioBuffer);
-                analyzeAudio(audio);
+                analyzeAudio(audio, 'user');
             };
             recorder.start();
         })
@@ -47,35 +48,37 @@ function stopRecording() {
     compareButton.disabled = false;
 }
 
-function analyzeAudio(audio) {
+function analyzeAudio(audio, type) {
     let fft = new p5.FFT();
     let buffer = audio.getChannelData(0);
-    fft.setInput(new p5.SoundFile(buffer));
+    let soundFile = new p5.SoundFile();
+    soundFile.setBuffer([buffer]);
+    fft.setInput(soundFile);
     
     let spectrum = fft.analyze();
     
     let formants = estimateFormants(spectrum);
     
-    output.textContent = 'Formants analyzed: ' + JSON.stringify(formants);
+    if (type === 'user') {
+        output.textContent = 'User Formants: ' + JSON.stringify(formants);
+    } else if (type === 'native') {
+        output.textContent += ' | Native Formants: ' + JSON.stringify(formants);
+    }
 }
 
 function estimateFormants(spectrum) {
+    // 簡単なフォルマント解析の例
     let formants = { F1: 500, F2: 1500 };
+    // 実際のフォルマント解析には詳細なアルゴリズムが必要
     return formants;
 }
 
 function comparePronunciation() {
-    let nativeFormants = { F1: 500, F2: 1500 };
-    let userFormants = estimateFormants(spectrum);
-
-    let comparisonResult = compareFormants(nativeFormants, userFormants);
-    output.textContent = 'Comparison result: ' + JSON.stringify(comparisonResult);
-}
-
-function compareFormants(nativeFormants, userFormants) {
-    let result = {
-        F1Difference: Math.abs(nativeFormants.F1 - userFormants.F1),
-        F2Difference: Math.abs(nativeFormants.F2 - userFormants.F2)
+    // ネイティブの音声の解析
+    nativeAudio.play();
+    nativeAudio.onended = () => {
+        audioContext.decodeAudioData(nativeAudio.captureStream().getAudioTracks()[0], buffer => {
+            analyzeAudio(buffer, 'native');
+        });
     };
-    return result;
 }
