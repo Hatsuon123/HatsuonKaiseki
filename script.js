@@ -12,6 +12,9 @@ let canvas;
 
 recordButton.addEventListener('click', () => {
     if (recordButton.textContent === 'Start Recording') {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
         startRecording();
     } else {
         stopRecording();
@@ -37,7 +40,6 @@ function draw() {
 }
 
 function startRecording() {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
     navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
             let input = audioContext.createMediaStreamSource(stream);
