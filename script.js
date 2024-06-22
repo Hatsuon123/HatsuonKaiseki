@@ -5,6 +5,7 @@ let nativeAudio = document.getElementById('nativeAudio');
 let audioContext;
 let recorder;
 let audioChunks = [];
+let nativeBuffer;
 
 recordButton.addEventListener('click', () => {
     if (recordButton.textContent === 'Start Recording') {
@@ -75,10 +76,16 @@ function estimateFormants(spectrum) {
 
 function comparePronunciation() {
     // ネイティブの音声の解析
-    nativeAudio.play();
-    nativeAudio.onended = () => {
-        audioContext.decodeAudioData(nativeAudio.captureStream().getAudioTracks()[0], buffer => {
-            analyzeAudio(buffer, 'native');
-        });
-    };
+    if (!nativeBuffer) {
+        fetch('native_dog.mp3')
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+            .then(decodedData => {
+                nativeBuffer = decodedData;
+                analyzeAudio(nativeBuffer, 'native');
+            })
+            .catch(err => console.error('Error decoding native audio', err));
+    } else {
+        analyzeAudio(nativeBuffer, 'native');
+    }
 }
