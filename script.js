@@ -6,6 +6,9 @@ let audioContext;
 let recorder;
 let audioChunks = [];
 let nativeBuffer;
+let userFormants;
+let nativeFormants;
+let canvas;
 
 recordButton.addEventListener('click', () => {
     if (recordButton.textContent === 'Start Recording') {
@@ -16,6 +19,22 @@ recordButton.addEventListener('click', () => {
 });
 
 compareButton.addEventListener('click', comparePronunciation);
+
+function setup() {
+    canvas = createCanvas(800, 400);
+    canvas.parent('output');
+    noLoop();
+}
+
+function draw() {
+    background(220);
+    if (userFormants) {
+        drawFormants(userFormants, 'User', color(0, 0, 255));
+    }
+    if (nativeFormants) {
+        drawFormants(nativeFormants, 'Native', color(255, 0, 0));
+    }
+}
 
 function startRecording() {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -31,7 +50,8 @@ function startRecording() {
                 audioChunks = [];
                 let audioBuffer = await audioBlob.arrayBuffer();
                 let audio = await audioContext.decodeAudioData(audioBuffer);
-                analyzeAudio(audio, 'user');
+                userFormants = analyzeAudio(audio);
+                redraw();
             };
             recorder.start();
         })
@@ -49,7 +69,7 @@ function stopRecording() {
     compareButton.disabled = false;
 }
 
-function analyzeAudio(audio, type) {
+function analyzeAudio(audio) {
     let fft = new p5.FFT();
     let buffer = audio.getChannelData(0);
     let soundFile = new p5.SoundFile();
@@ -58,13 +78,7 @@ function analyzeAudio(audio, type) {
     
     let spectrum = fft.analyze();
     
-    let formants = estimateFormants(spectrum);
-    
-    if (type === 'user') {
-        output.textContent = 'User Formants: ' + JSON.stringify(formants);
-    } else if (type === 'native') {
-        output.textContent += ' | Native Formants: ' + JSON.stringify(formants);
-    }
+    return estimateFormants(spectrum);
 }
 
 function estimateFormants(spectrum) {
@@ -74,18 +88,30 @@ function estimateFormants(spectrum) {
     return formants;
 }
 
+function drawFormants(formants, label, col) {
+    fill(col);
+    noStroke();
+    textSize(16);
+    text(`${label} Formants`, 10, height - 10);
+    ellipse(formants.F1 / 4, height - 50, 20, 20);
+    text('F1', formants.F1 / 4 + 10, height - 50);
+    ellipse(formants.F2 / 4, height - 100, 20, 20);
+    text('F2', formants.F2 / 4 + 10, height - 100);
+}
+
 function comparePronunciation() {
-    // ネイティブの音声の解析
     if (!nativeBuffer) {
         fetch('native_dog.mp3')
             .then(response => response.arrayBuffer())
             .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
             .then(decodedData => {
                 nativeBuffer = decodedData;
-                analyzeAudio(nativeBuffer, 'native');
+                nativeFormants = analyzeAudio(nativeBuffer);
+                redraw();
             })
             .catch(err => console.error('Error decoding native audio', err));
     } else {
-        analyzeAudio(nativeBuffer, 'native');
+        nativeFormants = analyzeAudio(nativeBuffer);
+        redraw();
     }
 }
