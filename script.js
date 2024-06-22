@@ -11,10 +11,10 @@ let nativeFormants;
 let canvas;
 
 recordButton.addEventListener('click', () => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
     if (recordButton.textContent === 'Start Recording') {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
         startRecording();
     } else {
         stopRecording();
@@ -111,7 +111,10 @@ function comparePronunciation() {
                 nativeFormants = analyzeAudio(nativeBuffer);
                 redraw();
             })
-            .catch(err => console.error('Error decoding native audio', err));
+            .catch(err => {
+                console.error('Error decoding native audio', err);
+                output.textContent = 'Error decoding native audio: ' + err.message;
+            });
     } else {
         nativeFormants = analyzeAudio(nativeBuffer);
         redraw();
