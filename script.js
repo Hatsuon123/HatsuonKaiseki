@@ -1,45 +1,18 @@
-let audioContext;
-let recorder;
-let audioChunks = [];
-
-document.getElementById('recordButton').addEventListener('click', () => {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (document.getElementById('recordButton').textContent === 'Start Recording') {
-        startRecording();
+document.getElementById('getNativeAudio').addEventListener('click', async () => {
+    const word = document.getElementById('wordInput').value;
+    if (word) {
+        const nativeAudioUrl = await fetchNativeAudio(word);
+        document.getElementById('nativeAudio').src = nativeAudioUrl;
+        document.getElementById('nativeAudio').style.display = 'block';
+        document.getElementById('recordSection').style.display = 'block';
     } else {
-        stopRecording();
+        alert("Please enter a word.");
     }
 });
 
-function startRecording() {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            const input = audioContext.createMediaStreamSource(stream);
-            recorder = new MediaRecorder(stream);
-            recorder.ondataavailable = e => {
-                audioChunks.push(e.data);
-            };
-            recorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                audioChunks = [];
-                const audioBuffer = await audioBlob.arrayBuffer();
-                const audio = await audioContext.decodeAudioData(audioBuffer);
-                // フォルマント解析をここで実行
-                document.getElementById('compareButton').disabled = false;
-            };
-            recorder.start();
-        })
-        .catch(err => {
-            console.error('Error accessing microphone', err);
-            document.getElementById('output').textContent = 'Error accessing microphone: ' + err.message;
-        });
-    document.getElementById('recordButton').textContent = 'Stop Recording';
-    document.getElementById('compareButton').disabled = true;
-}
-
-function stopRecording() {
-    recorder.stop();
-    document.getElementById('recordButton').textContent = 'Start Recording';
+async function fetchNativeAudio(word) {
+    // 仮のネイティブ発音取得機能
+    // 実際には適切なAPIやサービスを使用してください
+    // ここではデモとして、既存の音声ファイルのURLを返します
+    return 'https://example.com/native_audio/' + word + '.mp3';
 }
