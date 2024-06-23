@@ -26,11 +26,11 @@
 <body>
     <h1>Pronunciation Practice</h1>
     <div id="inputSection">
-        <input type="text" id="wordInput" placeholder="Type a word" />
+        <input type="text" id="phraseInput" placeholder="Type a phrase" />
         <button id="getNativeAudio">Get Native Pronunciation</button>
     </div>
     <div id="recordSection" style="display:none;">
-        <audio id="nativeAudio" controls></audio>
+        <div id="audioControls"></div>
         <button id="recordButton">Start Recording</button>
         <button id="compareButton" disabled>Compare</button>
     </div>
@@ -38,7 +38,7 @@
         <canvas id="formantCanvas" width="800" height="400"></canvas>
     </div>
     <div id="output">
-        <p>Type a word and get started.</p>
+        <p>Type a phrase and get started.</p>
     </div>
     <script src="script.js"></script>
 </body>
