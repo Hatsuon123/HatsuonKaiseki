@@ -16,7 +16,7 @@ document.getElementById('getNativeAudio').addEventListener('click', async () => 
 
 async function fetchNativeAudio(word) {
     const apiKey = 'YOUR_ELEVENLABS_API_KEY'; // 97b5c406b7cde32439c3c5bb1802a696
-    const response = await fetch('https://api.elevenlabs.io/v1/text-to-speech', {
+    const response = await fetch('https://api.elevenlabs.io/v1/text-to-speech/6OGIebVd3VTvANBC9LnQ', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
