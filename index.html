@@ -30,7 +30,9 @@
         <button id="getNativeAudio">Get Native Pronunciation</button>
     </div>
     <div id="recordSection" style="display:none;">
-        <div id="audioControls"></div>
+        <audio id="nativeAudio" controls></audio>
+        <button id="recordButton">Start Recording</button>
+        <button id="compareButton" disabled>Compare</button>
     </div>
     <div id="analysisSection" style="display:none;">
         <canvas id="formantCanvas" width="800" height="400"></canvas>
